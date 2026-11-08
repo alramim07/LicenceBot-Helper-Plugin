@@ -10,17 +10,17 @@ An enterprise WordPress/WooCommerce plugin engineered for **automated software l
 
 ---
 
-## 🏗️ Architecture & License Delivery Flow
+## Architecture & License Delivery Flow
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Customer as 🛒 Customer
-    participant WC as 🛍️ WooCommerce Order Processing
-    participant Enc as 🔐 AES-256 Encryption Engine
-    participant DB as 🗄️ Secure Serial Key Tables
-    participant Cloud as ☁️ LicenceBot SaaS API
-    actor Software as 💻 Client Software / App
+    actor Customer as Customer
+    participant WC as WooCommerce Order Processing
+    participant Enc as AES-256 Encryption Engine
+    participant DB as Secure Serial Key Tables
+    participant Cloud as LicenceBot SaaS API
+    actor Software as Client Software / App
 
     Customer->>WC: Purchases Software / Digital Product
     WC->>DB: Query Available Serial / Generate Dynamic Key
@@ -37,29 +37,29 @@ sequenceDiagram
 
 ---
 
-## 🌟 Key Functional Capabilities
+## Core Features
 
-### 1. 🔑 Cryptographic License & Serial Number Engine
+### 1. Cryptographic License & Serial Number Engine
 - **AES-256-CBC Encryption at Rest:** Serial numbers and license keys are encrypted in the database (`AC_Serial_Numbers_Encryption`) utilizing dynamic per-installation SHA-256 salted hashes and OpenSSL ciphers.
 - **Dynamic Key Generation:** Automatic key generation matching custom formatting rules (e.g., `XXXX-XXXX-XXXX-XXXX`), pre-loaded CSV key pools, or variable product assignments.
 - **Validity & Expiration Controls:** Configure validity limits (lifetime, days, or hard expiration dates) and device activation maximums per license key.
 
-### 2. ⚡ RESTful License Verification APIs
+### 2. RESTful License Verification APIs
 Provides high-performance, token-authenticated REST endpoints for external software, desktop apps, and WordPress plugins:
 - `POST /wp-json/licencebot/v1/activate` — Validate key, bind Hardware Machine ID (HWID) or domain, and increment activation counters.
 - `POST /wp-json/licencebot/v1/deactivate` — Unbind client instances during hardware migration.
 - `GET /wp-json/licencebot/v1/check` — Fast remote status polling with transient caching to avoid database bottlenecks.
 
-### 3. ☁️ LicenceBot Cloud Auto-Connect
+### 3. LicenceBot Cloud Auto-Connect
 - **Token Exchange Onboarding:** Zero-configuration setup via organization tokens or secure handshake tokens (eliminating manual API key copy-pasting).
 - **Asynchronous Webhook Pushes:** Dispatches background order events (`class-ac-serial-numbers-webhook.php`) to the LicenceBot SaaS dashboard with retry mechanics.
 - **Config Synchronization:** Pulls remote widget settings and feature flags, automatically cached in WordPress transients.
 
-### 4. 🛒 Cart Abandonment Recovery
+### 4. Cart Abandonment Recovery
 - **Real-Time Capture:** Tracks guest and logged-in cart activity on key-up events.
 - **Automated Follow-ups:** Trigger scheduled recovery emails with unique single-use discount coupon codes before customers bounce.
 
-### 5. 📈 Conversion & Social-Proof Growth Widgets
+### 5. Conversion & Social-Proof Growth Widgets
 Built-in lightweight front-end widgets without bloated external dependencies:
 - **Product Page Social Proof:** Live sales counters, recent buyer popups, and real-time visitor alert badges.
 - **Urgency Drivers:** Dynamic countdown timers for flash sales and limited software release windows.
@@ -67,7 +67,7 @@ Built-in lightweight front-end widgets without bloated external dependencies:
 
 ---
 
-## 📂 Codebase Organization
+## Codebase Organization
 
 ```
 LicenceBot-Helper-Plugin/
@@ -93,7 +93,7 @@ LicenceBot-Helper-Plugin/
 
 ---
 
-## 🛠️ Requirements & System Prerequisites
+## Requirements & System Prerequisites
 
 | Dependency | Minimum Requirement | Tested Up To |
 |---|---|---|
@@ -104,11 +104,11 @@ LicenceBot-Helper-Plugin/
 
 ---
 
-## ⚙️ Installation & Developer Usage
+## Installation & Developer Usage
 
 ### Installation
 1. Package the plugin files into a ZIP archive: `LicenceBot-Helper-Plugin.zip`.
-2. In WordPress Admin, go to **Plugins $\rightarrow$ Add New $\rightarrow$ Upload Plugin**.
+2. In WordPress Admin, go to **Plugins -> Add New -> Upload Plugin**.
 3. Upload and click **Activate**.
 
 ### Verifying a License via REST API (Example)
@@ -138,5 +138,5 @@ curl -X POST "https://yourstore.com/wp-json/licencebot/v1/activate" \
 
 ---
 
-## 📄 License
+## License
 This plugin is licensed under the **GNU General Public License v2.0 or later (GPL-2.0+)**.
