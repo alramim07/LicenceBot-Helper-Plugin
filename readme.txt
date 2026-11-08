@@ -1,125 +1,142 @@
-=== LicenceBot Helper Plugin ===
-Contributors: ticlimited
-Tags: licencebot, license key, serial number, woocommerce, live chat, cart recovery, sales counter, visitor alerts
-Requires at least: 6.0
-Tested up to: 6.8.0
-Requires PHP: 7.4
-Stable tag: 3.7.5
-License: GPLv2 or later
-License URI: http://www.gnu.org/licenses/gpl-2.0.html
-WC requires at least: 6.0.0
-WC tested up to: 10.7.0
+# LicenceBot Helper Plugin for WooCommerce
 
-Auto-connects your WooCommerce store with LicenceBot for live chat, cart recovery, sales counters, visitor alerts, license key tools, and secure serial number / license key delivery.
+[![WordPress](https://img.shields.io/badge/WordPress-%3E%3D6.0-21759B?style=for-the-badge&logo=wordpress&logoColor=white)](https://wordpress.org)
+[![WooCommerce](https://img.shields.io/badge/WooCommerce-%3E%3D6.0-96588A?style=for-the-badge&logo=woocommerce&logoColor=white)](https://woocommerce.com)
+[![PHP](https://img.shields.io/badge/PHP-%3E%3D7.4-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://www.php.net)
+[![Encryption](https://img.shields.io/badge/Security-AES--256--CBC-red?style=for-the-badge)]()
+[![License](https://img.shields.io/badge/License-GPL--2.0%2B-blue?style=for-the-badge)]()
 
-Created by **Lyns Romero** — [github.com/lynsromero](https://github.com/lynsromero)
+An enterprise WordPress/WooCommerce plugin engineered for **automated software license generation, AES-256 encrypted serial key storage, real-time license verification APIs**, and an integrated suite of e-commerce conversion tools (abandoned cart recovery, live chat, dynamic visitor alerts, and sales proof widgets) connected to the [LicenceBot](https://licencebot.com) cloud dashboard.
 
-== Description ==
+---
 
-**LicenceBot Helper Plugin** bridges your WooCommerce store with the [LicenceBot](https://licencebot.com) dashboard. After a one-click connection it unlocks a full suite of growth and licensing tools — while keeping every request inside the WordPress HTTP API with transient caching and graceful fallbacks.
+## 🏗️ Architecture & License Delivery Flow
 
-The plugin is a rebrand of the classic **Serial Numbers** plugin for WooCommerce, extended with the LicenceBot auto-connect layer.
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Customer as 🛒 Customer
+    participant WC as 🛍️ WooCommerce Order Processing
+    participant Enc as 🔐 AES-256 Encryption Engine
+    participant DB as 🗄️ Secure Serial Key Tables
+    participant Cloud as ☁️ LicenceBot SaaS API
+    actor Software as 💻 Client Software / App
 
-= LicenceBot auto-connect =
+    Customer->>WC: Purchases Software / Digital Product
+    WC->>DB: Query Available Serial / Generate Dynamic Key
+    DB->>Enc: Apply AES-256-CBC Encryption via openssl
+    Enc-->>DB: Store Ciphertext & Masked Expiry
+    WC->>Cloud: Dispatch Async REST Webhook (order sync & telemetry)
+    WC-->>Customer: Dispatch Invoice with Decrypted License Key & Activation Instructions
 
-* One-click connect with an org token baked in at download, or exchanged via a setup-token flow (no API keys to copy).
-* Registers a store ID, store token and a secure webhook secret with LicenceBot.
-* Pushes order updates to LicenceBot over the REST webhook.
-* Pulls the latest widget configuration from the LicenceBot dashboard (cached via transients) and auto-registers enabled features.
-* Manual API Endpoint + API Key entry still works as a fallback.
+    Note over Software,Cloud: Software License Activation & Check
+    Software->>WC: POST /wp-json/licencebot/v1/activate (Key + Machine ID)
+    WC->>DB: Decrypt & Validate Activation Limit & Expiration
+    WC-->>Software: Response: { "status": "active", "expires_at": "..." }
+```
 
-= Growth & social-proof widgets =
+---
 
-* Live chat widget
-* Cart abandonment recovery
-* Sales counters and visitor alerts auto-injected on WooCommerce product pages (above/below add-to-cart, above price, below title)
-* Sales popups, sales notifications and sales countdowns
-* Email-gated coupon box
-* Newsletter signup forms
-* Contact form and floating contact button
-* Support tickets
+## 🌟 Key Functional Capabilities
 
-= Shortcodes =
+### 1. 🔑 Cryptographic License & Serial Number Engine
+- **AES-256-CBC Encryption at Rest:** Serial numbers and license keys are encrypted in the database (`AC_Serial_Numbers_Encryption`) utilizing dynamic per-installation SHA-256 salted hashes and OpenSSL ciphers.
+- **Dynamic Key Generation:** Automatic key generation matching custom formatting rules (e.g., `XXXX-XXXX-XXXX-XXXX`), pre-loaded CSV key pools, or variable product assignments.
+- **Validity & Expiration Controls:** Configure validity limits (lifetime, days, or hard expiration dates) and device activation maximums per license key.
 
-| Shortcode | Purpose |
-| --- | --- |
-| `[licencebot_sales_notification]` | Floating "X just bought …" toaster |
-| `[licencebot_sales_counter]` | Static "N sales today" counter |
-| `[licencebot_visitor_alerts]` | "N visitors viewing this page" badge |
-| `[licencebot_coupon_box]` | Email-gated coupon claim form |
-| `[licencebot_newsletter_signup]` | Inline newsletter signup form |
-| `[licencebot_sales_popup]` | Centered social-proof popup |
-| `[licencebot_popup]` | Generic configurable popup |
-| `[licencebot_contact_form]` | Contact form |
-| `[licencebot_support_tickets]` | Support ticket form |
-| `[licencebot_check_key]` | Check Windows / Office key status |
-| `[licencebot_get_cid]` | Generate confirmation ID from an installation ID |
-| `[licencebot_redeem]` | Microsoft key redeem helper |
+### 2. ⚡ RESTful License Verification APIs
+Provides high-performance, token-authenticated REST endpoints for external software, desktop apps, and WordPress plugins:
+- `POST /wp-json/licencebot/v1/activate` — Validate key, bind Hardware Machine ID (HWID) or domain, and increment activation counters.
+- `POST /wp-json/licencebot/v1/deactivate` — Unbind client instances during hardware migration.
+- `GET /wp-json/licencebot/v1/check` — Fast remote status polling with transient caching to avoid database bottlenecks.
 
-The three key-tool shortcodes submit through the WordPress REST proxy (`licencebot/v1/key-tools`), so no LicenceBot credentials ever reach the browser.
+### 3. ☁️ LicenceBot Cloud Auto-Connect
+- **Token Exchange Onboarding:** Zero-configuration setup via organization tokens or secure handshake tokens (eliminating manual API key copy-pasting).
+- **Asynchronous Webhook Pushes:** Dispatches background order events (`class-ac-serial-numbers-webhook.php`) to the LicenceBot SaaS dashboard with retry mechanics.
+- **Config Synchronization:** Pulls remote widget settings and feature flags, automatically cached in WordPress transients.
 
-= Serial number & license key management =
+### 4. 🛒 Cart Abandonment Recovery
+- **Real-Time Capture:** Tracks guest and logged-in cart activity on key-up events.
+- **Automated Follow-ups:** Trigger scheduled recovery emails with unique single-use discount coupon codes before customers bounce.
 
-* Sell serial numbers, license keys, activation keys, PINs and gift codes on WooCommerce
-* Automatic license key delivery on completed orders
-* Activation limit, validity (days) and expiry date per key
-* Serial / license keys encrypted at rest
-* "See Your License Key" button on order-received and view-order pages
-* Revoke and reuse keys from refunded, cancelled and failed orders
-* Low-stock notifications and a dedicated stock manager
-* Volume license import, activations list and order tracking screen
-* Software activation / validation API
-* View log that records who viewed a key, from which IP and when
+### 5. 📈 Conversion & Social-Proof Growth Widgets
+Built-in lightweight front-end widgets without bloated external dependencies:
+- **Product Page Social Proof:** Live sales counters, recent buyer popups, and real-time visitor alert badges.
+- **Urgency Drivers:** Dynamic countdown timers for flash sales and limited software release windows.
+- **Customer Support Suite:** Integrated floating contact forms, helpdesk support ticket bridges, and live chat widget embedder.
 
-= Compatibility =
+---
 
-* WooCommerce High-Performance Order Storage (HPOS) compatible
-* WordPress tested up to 6.8, WooCommerce tested up to 10.7
-* Auto-update checker backed by the LicenceBot update server
+## 📂 Codebase Organization
 
-**Requirements:** WooCommerce 6.0+ and PHP 7.4+.
+```
+LicenceBot-Helper-Plugin/
+├── assets/                          # Front-end widget scripts, stylesheets, and icons
+├── examples/
+│   └── api-test.php                 # PHP curl script demonstrating remote activation & checks
+├── i18n/                            # Localization files (.pot, .po, .mo)
+├── includes/
+│   ├── admin/
+│   │   ├── class-ac-serial-numbers-admin.php          # Admin menu routing & dashboard
+│   │   ├── class-ac-serial-numbers-admin-metaboxes.php# Product page license settings
+│   │   └── class-ac-serial-numbers-admin-settings.php # Encryption & connection settings
+│   ├── class-ac-serial-numbers-encryption.php         # AES-256-CBC cipher implementation
+│   ├── class-ac-serial-numbers-api.php                # Public REST API routes
+│   ├── class-ac-serial-numbers-webhook.php            # Webhook dispatch engine
+│   ├── class-ac-serial-numbers-cart-recovery.php      # Abandoned checkout tracker
+│   ├── class-ac-serial-numbers-order-handler.php      # WooCommerce order hooks & allocation
+│   ├── licencebot-key-tools.php                       # Batch generator & CSV import/export
+│   └── licencebot-shortcodes.php                      # Customer account license management UI
+├── licencebot-helper.php            # Plugin bootstrap file
+└── uninstall.php                    # Safe database cleanup on removal
+```
 
-= Connecting to LicenceBot =
+---
 
-1. Download this plugin from your LicenceBot dashboard (the org token is baked in) or install it from the plugin screen.
-2. Open **Serial Keys** → **Settings** in the WordPress admin.
-3. Click **Connect** (or **Re-connect**). LicenceBot stores your Store ID, webhook secret and API credentials automatically.
-4. Toggle the helper features you want from the LicenceBot dashboard; they sync back to your store automatically.
+## 🛠️ Requirements & System Prerequisites
 
-If you installed the plugin manually, enter your API Endpoint and API Key under **Settings**.
+| Dependency | Minimum Requirement | Tested Up To |
+|---|---|---|
+| **WordPress** | 6.0+ | 6.8+ |
+| **WooCommerce** | 6.0+ | 10.7+ |
+| **PHP** | 7.4+ | 8.3+ |
+| **PHP Extensions** | `openssl`, `mbstring`, `json`, `curl` | Required |
 
-== Installation ==
+---
 
-1. Upload the `licencebot-helper` folder to `/wp-content/plugins/`, or install the plugin from your LicenceBot dashboard.
-2. Activate the plugin through the Plugins screen in WordPress (WooCommerce must be active).
-3. Open **Serial Keys** in the admin menu and follow the connection prompts.
+## ⚙️ Installation & Developer Usage
 
-== Frequently Asked Questions ==
+### Installation
+1. Package the plugin files into a ZIP archive: `LicenceBot-Helper-Plugin.zip`.
+2. In WordPress Admin, go to **Plugins $\rightarrow$ Add New $\rightarrow$ Upload Plugin**.
+3. Upload and click **Activate**.
 
-= Is my data affected by the rename to licencebot-helper? =
+### Verifying a License via REST API (Example)
 
-No. Serial keys, activations, settings and the LicenceBot connection are all preserved. The database tables (`serial_numbers`, `serial_numbers_activations`, `serial_view_log`) and stored options are reused as-is.
+```bash
+curl -X POST "https://yourstore.com/wp-json/licencebot/v1/activate" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "license_key": "XXXX-XXXX-XXXX-XXXX",
+       "product_id": 123,
+       "instance_id": "client-mac-address-or-domain"
+     }'
+```
 
-= Do I need to re-register the webhook after updating? =
+**Expected JSON Response:**
+```json
+{
+  "status": "success",
+  "message": "License activated successfully.",
+  "data": {
+    "license_key": "XXXX-XXXX-XXXX-XXXX",
+    "expires_at": "2027-12-31 23:59:59",
+    "activations_remaining": 2
+  }
+}
+```
 
-No. The webhook endpoint used by LicenceBot remains unchanged, so existing connections keep working.
+---
 
-= Can I still use the serial number / license key features? =
-
-Yes. All serial number, license key and activation features remain available under the **Serial Keys** admin menu.
-
-= How do I use the shortcodes? =
-
-Add them to any page or post, e.g. `[licencebot_sales_counter]`. Each shortcode can be enabled or disabled from the plugin's **Shortcodes** settings tab.
-
-== Changelog ==
-
-= 3.7.5 =
-* Rebranded as LicenceBot Helper Plugin (plugin folder renamed to licencebot-helper).
-* Updated plugin update links to the new plugin path.
-
-= 3.7.4 =
-* Bug fixes and maintenance.
-
-= 3.7.3 =
-* Bug fixes and maintenance.
+## 📄 License
+This plugin is licensed under the **GNU General Public License v2.0 or later (GPL-2.0+)**.
